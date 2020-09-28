@@ -1,28 +1,33 @@
 package Player;
 
-
 import simulator.PositionInMaze;
-
 import java.io.Serializable;
 import java.util.UUID;
 
 public class Player implements Serializable {
-	private PositionInMaze pos;
+	private PositionInMaze position;
 	private String uuid;
 	private String username;
 
 	public Player(PositionInMaze pos, String uuid, String username) {
-		this.pos = pos;
+		this.position = pos;
 		this.uuid = UUID.randomUUID().toString();
 		this.username = username;
 	}
 
-	public PositionInMaze getPos() {
-		return pos;
+	public Player(String username, PositionInMaze position) {
+		super();
+		this.username = username;
+		this.position = position;
+		this.uuid = UUID.randomUUID().toString();
 	}
 
-	public void setPos(PositionInMaze pos) {
-		this.pos = pos;
+	public PositionInMaze getPosition() {
+		return position;
+	}
+
+	public void setPosition(PositionInMaze position) {
+		this.position = position;
 	}
 
 	public String getUuid() {
@@ -44,7 +49,7 @@ public class Player implements Serializable {
 	@Override
 	public String toString() {
 		return "Player{" +
-				"pos=" + pos +
+				"pos=" + position +
 				", uuid='" + uuid + '\'' +
 				", username='" + username + '\'' +
 				'}';

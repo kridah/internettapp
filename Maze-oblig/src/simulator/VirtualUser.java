@@ -1,5 +1,6 @@
 package simulator;
 
+import Player.Player;
 import mazeoblig.Box;
 
 import java.util.Random;
@@ -34,6 +35,7 @@ public class VirtualUser {
 	static int xp;
 	static int yp;
 	static boolean found = false;
+	Player player;
 
 	
 	private Stack <PositionInMaze> myWay = new Stack<PositionInMaze>();
@@ -44,9 +46,10 @@ public class VirtualUser {
 	 * Konstruktør
 	 * @param maze
 	 */
-	public VirtualUser(Box[][] maze) {
+	public VirtualUser(Box[][] maze, Player player) {
 		this.maze = maze;
 		dim = maze[0].length;
+		this.player = player;
 		init();
 	}
 	/**

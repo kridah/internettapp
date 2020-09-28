@@ -1,5 +1,8 @@
 package simulator;
 
+import mazeoblig.Box;
+import mazeoblig.Game;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -19,9 +22,14 @@ public class PlayerSimulator implements Runnable {
 	public void run() {
 		try {
 			int fails = 0;
-			//VirtualUser virtualUser = new VirtualUser(game.getMaze(), game.getUser());
+			Game game = new Game();
+			VirtualUser virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
+
+			PositionInMaze[] pos = virtualUser.getFirstIterationLoop();
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 		}
 	}
+
+
 }

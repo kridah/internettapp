@@ -31,6 +31,7 @@ public class RMIServer
   private static String HOST_NAME;
   private static InetAddress myAdress = null;
   private static RMIServer rmi;
+  private int MAX_CLIENTS = 0;
 
   private static BoxMaze maze;
   public static String MazeName = "Maze";

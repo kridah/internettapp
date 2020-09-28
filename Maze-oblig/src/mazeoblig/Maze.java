@@ -32,7 +32,8 @@ public class Maze extends Applet {
 
 	private BoxMazeInterface bm;
 	private Box[][] maze;
-	public static int DIM = 60;
+	Game game;
+	public static int DIM = 40;
 	private int dim = DIM;
 
 	static int xp;
@@ -66,13 +67,14 @@ public class Maze extends Applet {
 			 ** Henter inn referansen til Labyrinten (ROR)
 			 */
 			bm = (BoxMazeInterface) r.lookup(RMIServer.MazeName);
+			game = new Game();
 			maze = bm.getMaze();
 			
 /*
 ** Finner l�sningene ut av maze - se for�vrig kildekode for VirtualMaze for ytterligere
 ** kommentarer. L�sningen er implementert med backtracking-algoritme
 */
-			VirtualUser vu = new VirtualUser(maze);
+		/*	VirtualUser vu = new VirtualUser(maze);
 			PositionInMaze[] pos;
 			pos = vu.getFirstIterationLoop();
 
@@ -82,7 +84,7 @@ public class Maze extends Applet {
 			pos = vu.getIterationLoop();
 			for (int i = 0; i < pos.length; i++)
 				System.out.println(pos[i]);
-
+*/
 		}
 		catch (RemoteException e) {
 			System.err.println("Remote Exception: " + e.getMessage());
@@ -137,6 +139,6 @@ public class Maze extends Applet {
 				if (maze[x][y].getRight() == null)
 					g.drawLine(x * 10 + 10, y * 10, x * 10 + 10, y * 10 + 10);
 			}
+		//g.drawString("Hostname: " + server_hostname, 0, dim * 11);
 	}
 }
-
