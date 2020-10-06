@@ -30,7 +30,7 @@ public class VirtualUser {
 	 * 
 	 */
 	private Box[][] maze;
-	private int dim;
+	private static int dim;
 
 	static int xp;
 	static int yp;
@@ -48,7 +48,7 @@ public class VirtualUser {
 	 */
 	public VirtualUser(Box[][] maze, Player player) {
 		this.maze = maze;
-		dim = maze[0].length;
+		this.dim = maze[0].length;
 		this.player = player;
 		init();
 	}
@@ -245,4 +245,5 @@ public class VirtualUser {
 	public PositionInMaze [] getFirstIterationLoop() {
 		return FirstIteration;
 	}
+	public PositionInMaze getPosistionInMaze() { return new PositionInMaze(xp, yp);}
 }

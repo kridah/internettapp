@@ -28,7 +28,7 @@ public class RMIServer
   private final static int DEFAULT_PORT = 9000;
   private final static String DEFAULT_HOST = "undefined";
   public static int    PORT = DEFAULT_PORT;
-  private static String HOST_NAME;
+    private static String HOST_NAME;
   private static InetAddress myAdress = null;
   private static RMIServer rmi;
   private int MAX_CLIENTS = 0;
@@ -39,8 +39,12 @@ public class RMIServer
    * @todo: Her legger man til andre objekter som skal være på server
   */
 
+  public static String boxMaze = "BoxMaze";
+  public static String mazeServer = "mazeServer";
 
-  public RMIServer() throws RemoteException, MalformedURLException,
+
+
+    public RMIServer() throws RemoteException, MalformedURLException,
                              NotBoundException, AlreadyBoundException {
     getStaticInfo();
     LocateRegistry.createRegistry(PORT);
