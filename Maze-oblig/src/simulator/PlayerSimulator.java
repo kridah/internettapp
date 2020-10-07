@@ -1,6 +1,5 @@
 package simulator;
 
-import mazeoblig.Box;
 import mazeoblig.Game;
 
 import java.rmi.RemoteException;
@@ -24,8 +23,8 @@ public class PlayerSimulator implements Runnable {
 		try {
 			int fails = 0;
 			Game game = new Game();
-			//VirtualUser virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
-			VirtualUser virtualUser = new VirtualUser(game.getMaze());
+			VirtualUser virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
+			//VirtualUser virtualUser = new VirtualUser(game.getMaze());
 
 			Thread.sleep(500);
 
@@ -44,25 +43,25 @@ public class PlayerSimulator implements Runnable {
 				if (fails == 10) {
 					game.moveTo(game.getPlayer().getPosition().right());
 					//virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
-					virtualUser = new VirtualUser(game.getMaze());
+					virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
 					position = virtualUser.getFirstIterationLoop();
 					i = 0;
 				} else if (fails == 11) {
 					game.moveTo(game.getPlayer().getPosition().left());
 					//virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
-					virtualUser = new VirtualUser(game.getMaze());
+					virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
 					position = virtualUser.getFirstIterationLoop();
 					i = 0;
 				} else if (fails == 12) {
 					game.moveTo(game.getPlayer().getPosition().up());
 					//virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
-					virtualUser = new VirtualUser(game.getMaze());
+					virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
 					position = virtualUser.getFirstIterationLoop();
 					i = 0;
 				} else if (fails == 13) {
 					game.moveTo(game.getPlayer().getPosition().down());
 					//virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
-					virtualUser = new VirtualUser(game.getMaze());
+					virtualUser = new VirtualUser(game.getMaze(), game.getPlayer());
 					position = virtualUser.getFirstIterationLoop();
 					i = 0;
 				} else {

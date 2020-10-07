@@ -1,8 +1,9 @@
 package simulator;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class PositionInMaze {
+public class PositionInMaze implements Serializable {
 	private int xpos, ypos;
 	
 	public PositionInMaze(int xp, int yp) {

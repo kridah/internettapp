@@ -32,7 +32,7 @@ public class RMIServer
   private static String HOST_NAME;
   private static InetAddress myAdress = null;
   private static RMIServer rmi;
-  private int MAX_CLIENTS = 0;
+  private int MAX_CLIENTS = 5;
 
  private static BoxMazeInterface boxMazeInterface;
  private static MazeServerInterface mazeServerInterface;

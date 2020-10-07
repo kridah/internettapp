@@ -29,16 +29,16 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 	public void moveTo(Player player, PositionInMaze nextPosition) throws RemoteException {
 		if (player == null || player.getPosition().equals(nextPosition))
 			return;
-		if (game.validateNextMove(player.getPosition(), nextPosition)) {
-			lock.lock();        // Låser oppgaven til tråd
-			try {
+//		if (game.validateNextMove(player.getPosition(), nextPosition)) {
+//			lock.lock();        // Låser oppgaven til tråd
+//			try {
 				players.get(player.getUuid()).setPosition(nextPosition);
-			} finally {
-				lock.unlock();
-			}
-		} else {
+//			} finally {
+//				lock.unlock();
+//			}
+//		} else {
 			System.out.println("Spiller " + player.getUuid() + " kunne ikke utføre trekket");
-		}
+		//}
 	}
 
 	@Override

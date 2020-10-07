@@ -1,5 +1,8 @@
 package mazeoblig;
 
+import simulator.PositionInMaze;
+import simulator.VirtualUser;
+
 import java.awt.*;
 import java.applet.*;
 
@@ -76,13 +79,16 @@ public class Maze extends Applet {
 ** Finner l�sningene ut av maze - se for�vrig kildekode for VirtualMaze for ytterligere
 ** kommentarer. L�sningen er implementert med backtracking-algoritme
 *
-			VirtualUser vu = new VirtualUser(maze);
-			PositionInMaze [] pos;
-/*			pos = vu.getFirstIterationLoop();
+ */
+
+			// TODO: Kommenter ut. Denne koden viser koordinatene spiller må gå ut av labyrinten
+			VirtualUser vu = new VirtualUser(maze, game.getPlayer());
+			PositionInMaze[] pos;
+			pos = vu.getFirstIterationLoop();
 
 			for (int i = 0; i < pos.length; i++)
 				System.out.println(pos[i]);
-*
+
 			pos = vu.getIterationLoop();
 			for (int i = 0; i < pos.length; i++)
 				System.out.println(pos[i]);
@@ -142,5 +148,7 @@ public class Maze extends Applet {
 					g.drawLine(x * 10 + 10, y * 10, x * 10 + 10, y * 10 + 10);
 			}
 	}
+
+	// TODO: Tegn prikk for brukeren i maze
 }
 
