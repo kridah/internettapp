@@ -46,10 +46,10 @@ public class VirtualUser {
 	 * Konstruktør
 	 * @param maze
 	 */
-	public VirtualUser(Box[][] maze, Player player) {
+	public VirtualUser(Box[][] maze) {
 		this.maze = maze;
-		this.dim = maze[0].length;
-		this.player = player;
+		this.dim = maze.length;	// TODO: Kaster NullPointerException
+		//this.player = player;
 		init();
 	}
 	/**

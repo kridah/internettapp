@@ -15,6 +15,7 @@ package mazeoblig;
  */
 import java.net.*;
 
+import java.net.UnknownHostException;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 
@@ -28,19 +29,18 @@ public class RMIServer
   private final static int DEFAULT_PORT = 9000;
   private final static String DEFAULT_HOST = "undefined";
   public static int    PORT = DEFAULT_PORT;
-    private static String HOST_NAME;
+  private static String HOST_NAME;
   private static InetAddress myAdress = null;
   private static RMIServer rmi;
   private int MAX_CLIENTS = 0;
 
-  private static BoxMaze maze;
-  public static String MazeName = "Maze";
+ private static BoxMazeInterface boxMazeInterface;
+ private static MazeServerInterface mazeServerInterface;
+  public static String MazeName = "BoxMaze";
+  public static String mazeServerName = "MazeServer";
   /**
    * @todo: Her legger man til andre objekter som skal være på server
   */
-
-  public static String boxMaze = "BoxMaze";
-  public static String mazeServer = "mazeServer";
 
 
 
@@ -54,15 +54,21 @@ public class RMIServer
     /*
     ** Legger inn labyrinten
     */
-    maze = new BoxMaze(Maze.DIM);
+    boxMazeInterface = new BoxMaze(Maze.DIM);
     System.out.println( "Remote implementation object created" );
     String urlString = "//" + HOST_NAME + ":" + PORT + "/" +
-                       MazeName;
+            MazeName;
+    Naming.rebind( urlString, boxMazeInterface );
+    System.out.println( "Remote implementation object created for BoxMaze generator" );
 
-    Naming.rebind( urlString, maze );
-    /**
-    * @todo: Og her legges andre objekter som også skal være på server inn ....
-    */
+    mazeServerInterface = new MazeServer(boxMazeInterface.getMaze());
+    String mazeServerURL = "//" + HOST_NAME + ":" + PORT + "/" + mazeServerName;
+    Naming.rebind(mazeServerURL, mazeServerInterface);
+    System.out.println( "Remote implementation object created for MazeServer" );
+
+        /**
+		* @todo: Og her legges andre objekter som også skal være på server inn ....
+		*/
     System.out.println( "Bindings Finished, waiting for client requests." );
   }
 
@@ -73,9 +79,8 @@ public class RMIServer
     if (HOST_NAME == null) HOST_NAME = DEFAULT_HOST;
     if (PORT == 0) PORT = DEFAULT_PORT;
     if (HOST_NAME.equals("undefined")) {
-      try {
-        myAdress = InetAddress.getLocalHost();
-        /*
+
+          /*
         ** Merk at kallet under vil kunne gi meldingen :
         **
         ** "Internal errorjava.net.MalformedURLException: invalid authority"
@@ -86,13 +91,12 @@ public class RMIServer
         **
         ** Meldingen som gis har ingen betydning
         */
-//        HOST_NAME = myAdress.getHostName();
-        HOST_NAME = "localhost";
-      }
-      catch (java.net.UnknownHostException e) {
-        System.err.println("Klarer ikke å finne egen nettadresse");
-        e.printStackTrace(System.err);
-      }
+        try {
+            myAdress = InetAddress.getLocalHost();
+            HOST_NAME = "localhost";
+          } catch (UnknownHostException e) {
+              System.err.println("Fant ikke server " + HOST_NAME);
+          }
     }
     else
       System.out.println("En MazeServer kjører allerede, bruk den");

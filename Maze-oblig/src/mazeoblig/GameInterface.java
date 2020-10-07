@@ -4,9 +4,9 @@ import Player.Player;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Map;
+import java.util.HashMap;
 
 public interface GameInterface extends Remote {
-	public void updatePlayerPosition(Map<String, Player> map) throws RemoteException;
-	public void setPlayer(Player player) throws RemoteException;
+	 void updatePlayerPosition(HashMap<String, Player> map) throws RemoteException;
+	 void setPlayer(Player player) throws RemoteException;
 }

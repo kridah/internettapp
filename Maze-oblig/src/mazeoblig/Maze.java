@@ -1,8 +1,5 @@
 package mazeoblig;
 
-import simulator.PositionInMaze;
-import simulator.VirtualUser;
-
 import java.awt.*;
 import java.applet.*;
 
@@ -32,8 +29,8 @@ public class Maze extends Applet {
 
 	private BoxMazeInterface bm;
 	private Box[][] maze;
-	Game game;
-	public static int DIM = 40;
+	private Game game;
+	public static int DIM = 50;
 	private int dim = DIM;
 
 	static int xp;
@@ -48,6 +45,11 @@ public class Maze extends Applet {
 	 * Henter labyrinten fra RMIServer
 	 */
 	public void init() {
+		try {
+			game = new Game();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 		int size = dim;
 		/*
 		 ** Kobler opp mot RMIServer, under forutsetning av at disse
@@ -60,31 +62,31 @@ public class Maze extends Applet {
 			server_portnumber = RMIServer.getRMIPort();
 		try {
 			java.rmi.registry.Registry r = java.rmi.registry.LocateRegistry.
-			getRegistry(server_hostname,
-					server_portnumber);
+					getRegistry(server_hostname,
+							server_portnumber);
 
 			/*
 			 ** Henter inn referansen til Labyrinten (ROR)
 			 */
+
 			bm = (BoxMazeInterface) r.lookup(RMIServer.MazeName);
-			game = new Game();
-			maze = bm.getMaze();
-			
+			maze = game.getMaze();
+
 /*
 ** Finner l�sningene ut av maze - se for�vrig kildekode for VirtualMaze for ytterligere
 ** kommentarer. L�sningen er implementert med backtracking-algoritme
-*/
-		/*	VirtualUser vu = new VirtualUser(maze);
-			PositionInMaze[] pos;
-			pos = vu.getFirstIterationLoop();
+*
+			VirtualUser vu = new VirtualUser(maze);
+			PositionInMaze [] pos;
+/*			pos = vu.getFirstIterationLoop();
 
 			for (int i = 0; i < pos.length; i++)
 				System.out.println(pos[i]);
-
+*
 			pos = vu.getIterationLoop();
 			for (int i = 0; i < pos.length; i++)
 				System.out.println(pos[i]);
-*/
+/**/
 		}
 		catch (RemoteException e) {
 			System.err.println("Remote Exception: " + e.getMessage());
@@ -114,7 +116,7 @@ public class Maze extends Applet {
 
 	//Get parameter info
 	public String[][] getParameterInfo() {
-		String[][] pinfo = { {"Size", "int", ""},
+		java.lang.String[][] pinfo = { {"Size", "int", ""},
 		};
 		return pinfo;
 	}
@@ -139,6 +141,6 @@ public class Maze extends Applet {
 				if (maze[x][y].getRight() == null)
 					g.drawLine(x * 10 + 10, y * 10, x * 10 + 10, y * 10 + 10);
 			}
-		//g.drawString("Hostname: " + server_hostname, 0, dim * 11);
 	}
 }
+
