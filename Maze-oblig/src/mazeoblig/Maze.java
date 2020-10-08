@@ -3,8 +3,10 @@ package mazeoblig;
 import simulator.PositionInMaze;
 import simulator.VirtualUser;
 
+import javax.swing.*;
 import java.awt.*;
 import java.applet.*;
+
 
 /**
  *
@@ -19,136 +21,146 @@ import java.applet.*;
  * @author not attributable
  * @version 1.0
  */
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
+import java.util.HashMap;
+
+import static java.lang.Thread.sleep;
+
 /**
- * Tegner opp maze i en applet, basert p� definisjon som man finner p� RMIServer
- * RMIServer p� sin side  henter st�rrelsen fra definisjonen i Maze
- * @author asd
- *
+ * Class responsible for drawing the maze and populating it with clients
  */
 @SuppressWarnings("serial")
 public class Maze extends Applet {
 
-	private BoxMazeInterface bm;
-	private Box[][] maze;
-	private Game game;
-	public static int DIM = 50;
-	private int dim = DIM;
+	private Box[][] mazeBox;
+	public final static int DIM = 30;
+	Thread thread;
+	Game game;
+	private Boolean autorun = true;
+	private Boolean autorunStopped = false;
+	int refreshEvery = 1000;
+	//private String server_hostname;
+	//private int server_portnumber;
+	//private ServerInterface serverInterface;
+	private final int CLIENTS_TO_CREATE = 5;
 
-	static int xp;
-	static int yp;
-	static boolean found = false;
-
-	private String server_hostname;
-	private int server_portnumber;
-
+	private JPanel panel;
+	private Graphics graphics;
+	private Image image;
+	private int frameWidth = 500;
+	private int frameHeight = 500;
 
 	/**
-	 * Henter labyrinten fra RMIServer
+	 * Establish server and registry connection (will only work if server and client is run from the same computer)
+	 * Retrieve all remote objects from RMI server. Method supplied at project start, modified by author
 	 */
 	public void init() {
+		//int x, y;
+
 		try {
 			game = new Game();
-		} catch (RemoteException e) {
-			e.printStackTrace();
+		} catch (RemoteException re) {
+			System.err.println(re.getMessage());
+			System.exit(1);
 		}
-		int size = dim;
-		/*
-		 ** Kobler opp mot RMIServer, under forutsetning av at disse
-		 ** kj�rer p� samme maskin. Hvis ikke m� oppkoblingen
-		 ** skrives om slik at dette passer med virkeligheten.
-		 */
-		if (server_hostname == null)
-			server_hostname = RMIServer.getHostName();
-		if (server_portnumber == 0)
-			server_portnumber = RMIServer.getRMIPort();
-		try {
-			java.rmi.registry.Registry r = java.rmi.registry.LocateRegistry.
-					getRegistry(server_hostname,
-							server_portnumber);
+		mazeBox = game.getMaze();
 
-			/*
-			 ** Henter inn referansen til Labyrinten (ROR)
-			 */
+		// Graphics
+		image = createImage(frameWidth, frameHeight);
+		graphics = image.getGraphics();
 
-			bm = (BoxMazeInterface) r.lookup(RMIServer.MazeName);
-			maze = game.getMaze();
-
-/*
-** Finner l�sningene ut av maze - se for�vrig kildekode for VirtualMaze for ytterligere
-** kommentarer. L�sningen er implementert med backtracking-algoritme
-*
- */
-
-			// TODO: Kommenter ut. Denne koden viser koordinatene spiller må gå ut av labyrinten
-			VirtualUser vu = new VirtualUser(maze, game.getPlayer());
-			PositionInMaze[] pos;
-			pos = vu.getFirstIterationLoop();
-
-			for (int i = 0; i < pos.length; i++)
-				System.out.println(pos[i]);
-
-			pos = vu.getIterationLoop();
-			for (int i = 0; i < pos.length; i++)
-				System.out.println(pos[i]);
-/**/
-		}
-		catch (RemoteException e) {
-			System.err.println("Remote Exception: " + e.getMessage());
-			System.exit(0);
-		}
-		catch (NotBoundException f) {
-			/*
-			 ** En exception her er en indikasjon p� at man ved oppslag (lookup())
-			 ** ikke finner det objektet som man s�ker.
-			 ** �rsaken til at dette skjer kan v�re mange, men v�r oppmerksom p�
-			 ** at hvis hostname ikke er OK (RMIServer gir da feilmelding under
-			 ** oppstart) kan v�re en �rsak.
-			 */
-			System.err.println("Not Bound Exception: " + f.getMessage());
-			System.exit(0);
-		}
-	}
-
-	//Get a parameter value
-	public String getParameter(String key, String def) {
-		return getParameter(key) != null ? getParameter(key) : def;
-	}
-	//Get Applet information
-	public String getAppletInfo() {
-		return "Applet Information";
-	}
-
-	//Get parameter info
-	public String[][] getParameterInfo() {
-		java.lang.String[][] pinfo = { {"Size", "int", ""},
-		};
-		return pinfo;
-	}
-
-	/**
-	 * Viser labyrinten / tegner den i applet
-	 * @param g Graphics
-	 */
-	public void paint (Graphics g) {
-		int x, y;
-
-		// Tegner baser p� box-definisjonene ....
-
-		for (x = 1; x < (dim - 1); ++x)
-			for (y = 1; y < (dim - 1); ++y) {
-				if (maze[x][y].getUp() == null)
-					g.drawLine(x * 10, y * 10, x * 10 + 10, y * 10);
-				if (maze[x][y].getDown() == null)
-					g.drawLine(x * 10, y * 10 + 10, x * 10 + 10, y * 10 + 10);
-				if (maze[x][y].getLeft() == null)
-					g.drawLine(x * 10, y * 10, x * 10, y * 10 + 10);
-				if (maze[x][y].getRight() == null)
-					g.drawLine(x * 10 + 10, y * 10, x * 10 + 10, y * 10 + 10);
+		int dim = DIM;
+		for (int x = 0; x < (dim - 1); x++) {
+			for (int y = 0; y < (dim - 1); y++) {
+				if (mazeBox[x][y].getUp() == null)
+					graphics.drawLine(x * 10, y * 10, x * 10 + 10, y * 10);
+				if (mazeBox[x][y].getDown() == null)
+					graphics.drawLine(x * 10, y * 10 + 10, x * 10 + 10, y * 10 + 10);
+				if (mazeBox[x][y].getLeft() == null)
+					graphics.drawLine(x * 10, y * 10, x * 10, y * 10 + 10);
+				if (mazeBox[x][y].getRight() == null)
+					graphics.drawLine(x * 10 + 10, y * 10, x * 10 + 10, y * 10 + 10);
 			}
+
+			setBackground(Color.white);
+			panel = new JPanel() {
+				@Override
+				public void paintComponent(Graphics g) {
+					super.paintComponent(g);
+					g.drawImage(image, 0, 0, this);
+
+					game.getMazeClients().forEach((key, player) -> {
+						if (key.equals(game.getPlayer().getUuid())) {
+							return;
+						} else {
+							g.setColor(Color.black);
+						}
+						g.fillOval(player.getPosition().getXpos() * 10, player.getPosition().getYpos() * 10, 8, 8);
+					});
+
+					g.setColor(Color.MAGENTA);
+					g.fillOval(game.getPlayer().getPosition().getXpos() * 10, game.getPlayer().getPosition().getYpos() * 10, 8, 8);
+					showStatus("Antall spillere koblet til: " + game.getMazeClients().size());
+				}
+
+				@Override
+				public Dimension getPreferredSize() {
+					return new Dimension(frameWidth, frameHeight);
+				}
+			};
+			add(panel);
+
+
+			ActionListener actionListener = new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					repaint();
+				}
+			};
+
+		}
 	}
 
-	// TODO: Tegn prikk for brukeren i maze
-}
+	public void start() {
+		autopilot();
+	}
 
+	private void autopilot() {
+		thread = new Thread(() -> {
+			try {
+				PositionInMaze[] position;
+				VirtualUser virtualUser = new VirtualUser(mazeBox, game.getPlayer());
+
+				position = virtualUser.getFirstIterationLoop();
+				for (int i = 0; i < position.length; i++) {
+					if (autorunStopped) {
+						return;
+					}
+					sleep(500);
+					moveTo(position[i]);
+				}
+				position = virtualUser.getIterationLoop();
+				for (int i = 0; i < position.length; i++) {
+					if (autorunStopped) {
+						return;
+					}
+					sleep(500);
+					moveTo(position[i]);
+
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		});
+		if (autorun)
+			thread.start();
+	}
+
+	private void moveTo(PositionInMaze position) {
+		game.moveTo(position);
+		repaint();
+	}
+}

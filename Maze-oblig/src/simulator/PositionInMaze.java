@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class PositionInMaze implements Serializable {
+	private static final long serialVersionUID = -7098664856410899780L;
+
 	private int xpos, ypos;
 	
 	public PositionInMaze(int xp, int yp) {

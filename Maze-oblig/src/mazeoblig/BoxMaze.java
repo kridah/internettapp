@@ -23,6 +23,9 @@ import java.rmi.RemoteException;
 @SuppressWarnings("serial")
 public class BoxMaze extends UnicastRemoteObject implements BoxMazeInterface
 {
+
+    private static final long serialVersionUID = 8425834690471305516L;
+
     private int maze[][];
     protected Box boxmaze[][];
     private int size = 50;

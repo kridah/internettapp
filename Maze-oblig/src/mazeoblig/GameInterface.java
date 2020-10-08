@@ -8,5 +8,5 @@ import java.util.HashMap;
 
 public interface GameInterface extends Remote {
 	 void updatePlayerPosition(HashMap<String, Player> map) throws RemoteException;
-	 void setPlayer(Player player) throws RemoteException;
+	 void setPlayer(Player user) throws RemoteException;
 }

@@ -16,7 +16,10 @@ package mazeoblig;
 import java.net.*;
 
 import java.net.UnknownHostException;
-import java.rmi.*;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 
 /**
@@ -34,41 +37,33 @@ public class RMIServer
   private static RMIServer rmi;
   private int MAX_CLIENTS = 5;
 
- private static BoxMazeInterface boxMazeInterface;
- private static MazeServerInterface mazeServerInterface;
-  public static String MazeName = "BoxMaze";
-  public static String mazeServerName = "MazeServer";
   /**
    * @todo: Her legger man til andre objekter som skal være på server
   */
-
-
+    private static BoxMazeInterface boxMazeInterface;
+    private static MazeServerInterface mazeServerInterface;
+    public static String MazeName = "BoxMaze";
+    public static String mazeServerName = "MazeServer";
 
     public RMIServer() throws RemoteException, MalformedURLException,
-                             NotBoundException, AlreadyBoundException {
+            NotBoundException, AlreadyBoundException {
     getStaticInfo();
     LocateRegistry.createRegistry(PORT);
     System.out.println( "RMIRegistry created on host computer " + HOST_NAME +
                         " on port " + Integer.toString( PORT) );
 
-    /*
-    ** Legger inn labyrinten
-    */
+    /* Legger inn labyrinten */
     boxMazeInterface = new BoxMaze(Maze.DIM);
     System.out.println( "Remote implementation object created" );
-    String urlString = "//" + HOST_NAME + ":" + PORT + "/" +
-            MazeName;
+    String urlString = "//" + HOST_NAME + ":" + PORT + "/" + MazeName;
     Naming.rebind( urlString, boxMazeInterface );
     System.out.println( "Remote implementation object created for BoxMaze generator" );
 
     mazeServerInterface = new MazeServer(boxMazeInterface.getMaze());
     String mazeServerURL = "//" + HOST_NAME + ":" + PORT + "/" + mazeServerName;
     Naming.rebind(mazeServerURL, mazeServerInterface);
-    System.out.println( "Remote implementation object created for MazeServer" );
+    System.out.println("Remote implementation object created for MazeServer" );
 
-        /**
-		* @todo: Og her legges andre objekter som også skal være på server inn ....
-		*/
     System.out.println( "Bindings Finished, waiting for client requests." );
   }
 
@@ -79,18 +74,6 @@ public class RMIServer
     if (HOST_NAME == null) HOST_NAME = DEFAULT_HOST;
     if (PORT == 0) PORT = DEFAULT_PORT;
     if (HOST_NAME.equals("undefined")) {
-
-          /*
-        ** Merk at kallet under vil kunne gi meldingen :
-        **
-        ** "Internal errorjava.net.MalformedURLException: invalid authority"
-        **
-        ** i tilfeller hvor navnen på maskinen ikke tilfredstiller
-        ** spesielle krav.
-        ** I så tilfelle, bruk "localhost" i stedet.
-        **
-        ** Meldingen som gis har ingen betydning
-        */
         try {
             myAdress = InetAddress.getLocalHost();
             HOST_NAME = "localhost";
@@ -109,30 +92,25 @@ public class RMIServer
   public static String getHostName() { return HOST_NAME; }
   public static String getHostIP() { return myAdress.getHostAddress(); }
 
-   public static void main ( String[] args ) throws Exception {
-      try { rmi = new RMIServer(); }
-      catch ( java.rmi.UnknownHostException uhe ) {
+   public static void main ( String[] args ) {
+      try {
+          rmi = new RMIServer();
+      } catch ( java.rmi.UnknownHostException uhe ) {
          System.out.println( "Maskinnavnet, " + HOST_NAME + " er ikke korrekt." );
-      }
-      catch ( RemoteException re ) {
+      } catch ( RemoteException re ) {
          System.out.println( "Error starting service" );
          System.out.println( "" + re );
          re.printStackTrace(System.err);
-      }
-      catch ( MalformedURLException mURLe )
-      {
+      } catch ( MalformedURLException mURLe ) {
          System.out.println( "Internal error" + mURLe );
-      }
-      catch ( NotBoundException nbe )
-      {
+      } catch ( NotBoundException nbe ) {
          System.out.println( "Not Bound" );
          System.out.println( "" + nbe );
-      }
-      catch ( AlreadyBoundException abe )
-      {
+      } catch ( AlreadyBoundException abe ) {
          System.out.println( "Already Bound" );
          System.out.println( "" + abe );
       }
-      System.out.println("RMIRegistry on " + HOST_NAME + ":" + PORT + "\n----------------------------");
+      System.out.println("RMIRegistry on " + HOST_NAME + ":" + PORT +
+                         "\n----------------------------");
    }  // main
 }  // class RMIServer

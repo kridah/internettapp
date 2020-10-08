@@ -5,6 +5,8 @@ import simulator.PositionInMaze;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,10 +16,10 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 	private String SERVER_HOSTNAME;
 	private int SERVER_PORTNUMBER;
 	private BoxMazeInterface boxMazeInterface;
-	private MazeServerInterface mazeServerInterface;
+	private MazeServerInterface mazeServer;
 
 	private Box[][] maze;
-	Player player;
+	Player user;
 	private Map<String, Player> players = new HashMap<String, Player>();
 
 	public Game() throws RemoteException {
@@ -25,7 +27,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 		setup();
 		getMazeFromServer();
 		login();
-		players.put("1234", player);
+		players.put("1234", user);
 	}
 
 	private void getServerDetails() {
@@ -41,15 +43,15 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 		while (tries < 3) {
 			try {
 				tries++;
-				//Registry registry = LocateRegistry.getRegistry(SERVER_HOSTNAME, SERVER_PORTNUMBER);
-				java.rmi.registry.Registry registry =
-						java.rmi.registry.LocateRegistry.getRegistry(SERVER_HOSTNAME, SERVER_PORTNUMBER);
+				Registry registry = LocateRegistry.getRegistry(SERVER_HOSTNAME, SERVER_PORTNUMBER);
 
 				boxMazeInterface = (BoxMazeInterface) registry.lookup(RMIServer.MazeName);
-				mazeServerInterface = (MazeServerInterface) registry.lookup(RMIServer.mazeServerName);
+				mazeServer = (MazeServerInterface) registry.lookup(RMIServer.mazeServerName);
 				return;
 			} catch (RemoteException | NotBoundException e) {
 				e.printStackTrace();
+				System.err.println("Fant ikke objektet på serveren");
+				System.exit(0);
 			}
 		}
 		System.out.println("Avslutter");
@@ -64,24 +66,26 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 			try {
 				tries++;
 				maze = boxMazeInterface.getMaze();
+				return;
 			} catch (RemoteException e) {
 				System.out.println("Kunne ikke henter maze");
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Avslutter");
+		System.exit(1);
 	}
 
 	public void moveTo(PositionInMaze position) {
-		if (boxMazeInterface == null || position == null || player == null || player.getPosition().equals(position))
+		if (boxMazeInterface == null || position == null || user == null || user.getPosition().equals(position))
 			return;
 		int tries = 0;
-		// skal kunne sjekke alle fire retninger
 		while (tries < 3) {
 			try {
 				tries++;
-				if (validateNextMove(player.getPosition(), position)) {
-					mazeServerInterface.moveTo(player, position);
-					players.get(player.getUuid()).setPosition(position);
+				if (validateNextMove(user.getPosition(), position)) {
+					mazeServer.moveTo(user, position);
+					players.get(user.getUuid()).setPosition(position);
 				} else {
 					return;
 				}
@@ -90,36 +94,38 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 				System.out.println(re.getMessage());
 			}
 		}
+		System.out.println("Avslutter");
+		System.exit(1);
 	}
 
-	public boolean validateNextMove(PositionInMaze current, PositionInMaze next) {
-		int xCurrent = current.getXpos();
-		int yCurrent = current.getYpos();
-		int xNext = next.getXpos();
-		int yNext = next.getYpos();
+	private boolean validateNextMove(PositionInMaze current, PositionInMaze next) {
+		int currentXpos = current.getXpos();
+		int currentYpos = current.getYpos();
+		int nextXpos = next.getXpos();
+		int nextYpos = next.getYpos();
 
 		// Next position cannot be out of bounds
-		if (xNext < 0 || yNext < 0)
+		if (nextXpos < 0 || nextYpos < 0)
 			return false;
 
 		// One step at the time
-		boolean xDifference = xCurrent - xNext == 1 || xCurrent - xNext == -1;
-		boolean yDifference = yCurrent - yNext == 1 || yCurrent - yNext == -1;
+		boolean xDifference = currentXpos - nextXpos == 1 || currentXpos - nextXpos == -1;
+		boolean yDifference = currentYpos - nextYpos == 1 || currentYpos - nextYpos == -1;
 		if (!(xDifference ^ yDifference))
 			return false;
 
-		if (xCurrent - xNext == 0) {
-			if (yCurrent - yNext == 1) {
-				return maze[xCurrent][yCurrent].getUp() != null;
+		if (currentXpos - nextXpos == 0) {
+			if (currentYpos - nextYpos == 1) {
+				return maze[currentXpos][currentYpos].getUp() != null;
 			} else {
-				return maze[xCurrent][yCurrent].getDown() != null;
+				return maze[currentXpos][currentYpos].getDown() != null;
 			}
 		} else {
-			if (yCurrent - yNext == 0) {
-				if (xCurrent - xNext == 0) {
-					return maze[xCurrent][yCurrent].getLeft() != null;
+			if (currentYpos - nextYpos == 0) {
+				if (currentXpos - nextXpos == 0) {
+					return maze[currentXpos][currentYpos].getLeft() != null;
 				} else {
-					return maze[xCurrent][xNext].getRight() != null;
+					return maze[currentXpos][nextXpos].getRight() != null;
 				}
 			}
 			return false;    // move failed
@@ -129,7 +135,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 	@Override
 	public void updatePlayerPosition(HashMap<String, Player> playerMap) throws RemoteException {
 		players = playerMap;
-		player = players.get(player.getUuid());
+		user = players.get(user.getUuid());
 	}
 
 	private void login() {
@@ -140,17 +146,17 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 		while (tries < 3) {
 			try {
 				tries++;
- 				mazeServerInterface.registerPlayer("Ola Nordmann", this);
-				System.out.println(player.toString());
+ 				mazeServer.registerPlayer("Ola Nordmann", this);
+				System.out.println(user.toString());
 				return;
 			} catch (RemoteException e) {
-				e.printStackTrace();        // kunne ikke logge inn/koble til
+				e.getLocalizedMessage();        // kunne ikke logge inn/koble til
 			}
 		}
 	}
 
-	private void logout() {
-		if (player == null)
+	public void logout() {
+		if (user == null)
 			return;
 
 		int tries = 0;
@@ -158,7 +164,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 		while (tries < 3) {
 			try {
 				tries++;
-				mazeServerInterface.unregisterPlayer(player);
+				mazeServer.unregisterPlayer(user);
 				return;
 			} catch (RemoteException e) {
 				e.printStackTrace();
@@ -169,8 +175,8 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 	}
 
 	@Override
-	public void setPlayer(Player player) throws RemoteException {
-		this.player = player;
+	public void setPlayer(Player user) throws RemoteException {
+		this.user = user;
 	}
 
 	public Box[][] getMaze() {
@@ -178,7 +184,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 	}
 
 	public Player getPlayer() {
-		return player;
+		return user;
 	}
 
 	public Map<String, Player> getMazeClients() {
