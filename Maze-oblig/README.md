@@ -1,5 +1,5 @@
 # Maze - oblig i internettapplikasjoner H2020
-@author kda068 - Kristoffer Dahl
+@author Kristoffer Dahl - kda068
 
 ## Systemkrav
 Kodens GUI kjører i en Java applet*. Støtten for applet ble fjernet etter Java 9.0.4. Du må derfor ha denne
@@ -20,6 +20,8 @@ Maze og PLayerSimulator skal kunne kjøres i parallell, ie. flere GUI og simuler
 så lenge RMIServer kjører.
 
 -- Eclipse --
+Eclipse-installasjonen på mitt system nekter å finne/importere flere av modulene som koden krever.
+Jeg har derfor ikke kjørt eller testet koden i Eclipse.
  
 ## Kjøring
 RMIServer-klassen starter en tjenerinstans på port 9000 som klienter kan koble seg til. Tjenerens standardadresse
@@ -33,7 +35,7 @@ I det jeg skulle skrive om systemressurser, og hvor tilsynelatende lav CPU bruk 
  instans av PlayerSimulator med 100 klienter), så fikk systemkjernen panikk, og krasjet.
  
 ## Dokumentasjon
-Koden er skrevet til å være lett forståelig. Kommentarer er lagt til hvor det ikke nødvendigvis er opplagt hva som skjer.
+Koden er skrevet for å være selvforklarende. Kommentarer er lagt til hvor det ikke nødvendigvis er opplagt hva som skjer.
 
 ## Kjente feil
  - Det kan oppstå ConcurrentModificationException. Da må RMIServer startes på nytt
