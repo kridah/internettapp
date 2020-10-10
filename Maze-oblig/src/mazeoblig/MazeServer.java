@@ -6,8 +6,10 @@ import simulator.PositionInMaze;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Vector;
@@ -19,8 +21,8 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 	HashMap<String, GameInterface> clients;
 	HashMap<String, Player> players;
 	Box[][] boxmaze;
-	Lock lock = new ReentrantLock();
-	Vector<String> errorList;
+	Lock lock = new ReentrantLock();		// trådlås
+	Vector<String> errorList;				// Vektor = array med dynamisk størrelse
 
 	public MazeServer(Box[][] boxFromServer) throws RemoteException {
 		this.clients = new HashMap<String, GameInterface>();
@@ -39,17 +41,19 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 
 				temp.forEach((key, p) -> {
 					try {
-						lock.lock();
-						p.updatePlayerPosition(players);
-						lock.unlock();
+						GameInterface gi = (GameInterface) p;
+						gi.updatePlayerPosition(players);
 					} catch (RemoteException remoteException) {
 						System.err.println("Klarte ikke flytte spiller " + p.toString());
 						errorList.add(key);
 						remoteException.printStackTrace();
+					} catch (ConcurrentModificationException cme) {
+						cme.getMessage();
 					}
 				});
 				lock.lock();
 				errorList.forEach(error -> {
+					errorList.add(error);
 					System.out.println("Kunne ikke levere melding til " + error);
 				});
 				lock.unlock();
@@ -72,13 +76,14 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 			} finally {
 				lock.unlock();
 			}
-			System.out.println("bm.moveTo: Player " + p.getUuid() + " moved from " + p.getPosition() + " to " + nextPosition);
+			System.out.println("Player " + p.getUuid() + " moved from " + p.getPosition() + " to " + nextPosition);
 		} else {
 			System.out.println("Spiller " + p.getUuid() + " kunne ikke utføre trekket");
 			unregisterPlayer(p);
 		}
 	}
 
+	/* Sjekker at neste trekk er mulig å gjennomføre. Ie at det ikke er en vegg */
 	public boolean validateNextMove(PositionInMaze current, PositionInMaze next) {
 		int currentXpos = current.getXpos();
 		int currentYpos = current.getYpos();
@@ -93,9 +98,10 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 		// One step at the time
 		boolean xDifference = currentXpos - nextXpos == 1 || currentXpos - nextXpos == -1;
 		boolean yDifference = currentYpos - nextYpos == 1 || currentYpos - nextYpos == -1;
-		if (!(xDifference ^ yDifference)) {
+		if (xDifference == yDifference) {
 			return false;
 		}
+
 		if (currentXpos - nextXpos == 0) {
 			if (currentYpos - nextYpos == 1) {
 				return boxmaze[currentXpos][currentYpos].getUp() != null;
@@ -112,7 +118,7 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 			}
 			System.out.println("Validerer trekk fra" + current + " til " + next);
 
-			return false;    // move failed
+			return false;    // trekk feilet
 		}
 	}
 
@@ -120,8 +126,8 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 	public void registerPlayer(GameInterface game) throws RemoteException {
 		if (game != null && !clients.containsValue(game)) {
 			Player player = new Player(new PositionInMaze(
-							randomCoordinate(),
-							randomCoordinate()
+					randomCoordinate(),
+					randomCoordinate()
 			));
 
 			lock.lock();
@@ -130,6 +136,8 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 				clients.put(player.getUuid(), game);
 				System.out.println("Spiller #" + clients.size() + ", " + player.getUuid() + " koblet til");
 			lock.unlock();
+		} else {
+			System.out.println("Kunne ikke registrere spiller på tjener");
 		}
 	}
 
@@ -148,6 +156,7 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 		}
 	}
 
+	// Setter spiller på en tilfeldig plass i labyrinten
 	private int randomCoordinate() {
 		Random r = new Random();
 		return r.nextInt(boxmaze[0].length - 2) + 1;

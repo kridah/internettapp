@@ -37,22 +37,11 @@ public class Player implements Serializable {
 	public String getUuid() {
 		return uuid;
 	}
-/*	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
-	public String getUsername() {
-		return username;
-	}
-	public void setUsername(String username) {
-		this.username = username;
-	}*/
 
 	@Override
 	public String toString() {
 		return "Player{" +
 				"pos=" + position +
-				", uuid='" + uuid + '\'' +
-				", username='" + username + '\'' +
-				'}';
+				", uuid='" + uuid + '}';
 	}
 }

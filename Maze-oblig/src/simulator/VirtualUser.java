@@ -36,9 +36,6 @@ public class VirtualUser {
 	int yp;
 	static boolean found = false;
 	Player player;
-	Random rand = new Random();
-
-
 
 	private Stack <PositionInMaze> myWay = new Stack<PositionInMaze>();
 	private PositionInMaze [] FirstIteration; 
@@ -50,34 +47,15 @@ public class VirtualUser {
      * @param player
      */
 	public VirtualUser(Box[][] maze, Player player) {
+		dim = maze[0].length;
 		this.maze = maze;
-		this.dim = maze[0].length;
 		this.player = player;
 		this.xp = player.getPosition().getXpos();
 		this.yp = player.getPosition().getYpos();
-		//this.xp = rand.nextInt(dim - 2) + 1;
-		//this.yp = rand.nextInt(dim - 2) + 1;
 		makeFirstIteration();
 		makeNextIteration();
 	}
 
-	/**
-	 * Initsierer en tilfeldig posisjon i labyrint
-	 */
-	private void init() {
-		/* Setter en tifeldig posisjon i maze (xp og yp) */
-		Random rand = new Random();
-		xp = rand.nextInt(dim - 2) + 1;
-		yp = rand.nextInt(dim - 2) + 1;
-		//xp = player.getPosition().getXpos();
-		//yp = player.getPosition().getYpos();
-
-		// L�ser veien ut av labyrinten basert p� tilfeldig inngang ...
-		//makeFirstIteration();
-		// og deretter l�ses labyrinten basert p� inngang fra starten 
-		//makeNextIteration();
-	}
-	
 	/**
 	 * L�ser maze ut fra en tilfeldig posisjon i maze
 	 */

@@ -4,28 +4,11 @@ import simulator.PositionInMaze;
 import simulator.VirtualUser;
 
 import javax.swing.*;
+import java.applet.Applet;
 import java.awt.*;
-import java.applet.*;
-
-
-/**
- *
- * <p>Title: Maze</p>
- *
- * <p>Description: En enkel applet som viser den randomiserte labyrinten</p>
- *
- * <p>Copyright: Copyright (c) 2006</p>
- *
- * <p>Company: </p>
- *
- * @author not attributable
- * @version 1.0
- */
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
-import java.rmi.NotBoundException;
-import java.util.HashMap;
 
 import static java.lang.Thread.sleep;
 
@@ -33,18 +16,14 @@ import static java.lang.Thread.sleep;
  * Class responsible for drawing the maze and populating it with clients
  */
 @SuppressWarnings("serial")
-public class Maze extends Applet {
-	private BoxMazeInterface bm;
+public class Maze extends JApplet {
+	public final static int DIM = 50;        // størrelse på labyrint
+	boolean skipPlayerUpdate = false;
+	private Thread thread;
+	private Game game;
 	private Box[][] mazeBox;
-	public final static int DIM = 50;
-	Thread thread;
-	Game game;
 	private Boolean autorun = true;
 	private Boolean autorunStopped = false;
-	boolean skipPlayerUpdate = false;
-	int refreshEvery = 1000;
-
-
 	private JPanel panel;
 	private Graphics graphics;
 	private Image image;
@@ -54,8 +33,6 @@ public class Maze extends Applet {
 	 * Retrieve all remote objects from RMI server. Method supplied at project start, modified by author
 	 */
 	public void init() {
-		//int x, y;
-
 		try {
 			game = new Game();
 		} catch (RemoteException re) {
@@ -64,9 +41,9 @@ public class Maze extends Applet {
 		}
 		mazeBox = game.getMaze();
 
-		// Graphics
-		int frameWidth = 700;
-		int frameHeight = 700;
+		// GUI
+		int frameWidth = DIM * 10;
+		int frameHeight = DIM * 10;
 		image = createImage(frameWidth, frameHeight);
 		graphics = image.getGraphics();
 
@@ -84,6 +61,7 @@ public class Maze extends Applet {
 					graphics.drawLine(x * 10 + 10, y * 10, x * 10 + 10, y * 10 + 10);
 			}
 
+			/* Tegner GUI med visuelle representasjon av labyrint for klienten*/
 			setBackground(Color.white);
 			panel = new JPanel() {
 				@Override
@@ -91,15 +69,16 @@ public class Maze extends Applet {
 					super.paintComponent(g);
 					g.drawImage(image, 0, 0, this);
 
-					game.getMazeClients().forEach((key, player) -> {
+					game.getMazeClients().forEach((key, virtualPlayer) -> {
 						if (key.equals(game.getPlayer().getUuid())) {
 							return;
 						} else {
-							g.setColor(Color.black);
+							g.setColor(Color.black);            // farge for alle andre spillere i GUI
 						}
-						g.fillOval(player.getPosition().getXpos() * 10, player.getPosition().getYpos() * 10, 8, 8);
+						g.fillOval(virtualPlayer.getPosition().getXpos() * 10, virtualPlayer.getPosition().getYpos() * 10, 8, 8);
 					});
 
+					// Setter den lokale brukerens farge
 					g.setColor(Color.MAGENTA);
 					g.fillOval(game.getPlayer().getPosition().getXpos() * 10, game.getPlayer().getPosition().getYpos() * 10, 8, 8);
 					showStatus("Antall spillere koblet til: " + game.getMazeClients().size());
@@ -112,8 +91,6 @@ public class Maze extends Applet {
 			};
 			add(panel);
 
-			int refreshRate = 500;
-
 			ActionListener actionListener = new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -124,6 +101,7 @@ public class Maze extends Applet {
 					}
 				}
 			};
+			int refreshRate = 500;
 			Timer timer = new Timer(refreshRate, actionListener);
 			timer.setRepeats(true);
 			timer.start();
@@ -136,8 +114,11 @@ public class Maze extends Applet {
 		}
 	}
 
-	public void start() { autopilot(); }
+	public void start() {
+		autopilot();
+	}
 
+	/* Fører spillere gjennom labyrinten basert på IterationLoop */
 	private void autopilot() {
 		thread = new Thread(() -> {
 			try {
@@ -159,10 +140,10 @@ public class Maze extends Applet {
 					}
 					sleep(500);
 					moveTo(position[i]);
-
 				}
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				System.err.println("Autopilot feilet. Mistet tråden");
+				e.getLocalizedMessage();
 			}
 		});
 		if (autorun)
@@ -170,7 +151,7 @@ public class Maze extends Applet {
 	}
 
 	private void moveTo(PositionInMaze position) {
-		skipPlayerUpdate=true;
+		skipPlayerUpdate = true;
 		game.moveTo(position);
 		repaint();
 	}

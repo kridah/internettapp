@@ -13,14 +13,13 @@ import java.util.Map;
 
 public class Game extends UnicastRemoteObject implements GameInterface {
 
+	Player user;
 	private String SERVER_HOSTNAME;
 	private int SERVER_PORTNUMBER;
 	private BoxMazeInterface boxMazeInterface;
 	private MazeServerInterface mazeServer;
 	private MazeServer ms;
-
 	private Box[][] maze;
-	Player user;
 	private Map<String, Player> players = new HashMap<String, Player>();
 
 	public Game() throws RemoteException {
@@ -38,6 +37,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 			SERVER_PORTNUMBER = RMIServer.getRMIPort();
 	}
 
+	/* Prøver å sette opp tilkobling til RMIServer */
 	private void setup() {
 		int tries = 0;
 		while (tries < 3) {
@@ -58,6 +58,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 		System.exit(1);
 	}
 
+	/* Ved vellykket tilkobling blir en logisk representasjon av labyrinten (maze) hentet fra tjener */
 	private void getMazeFromServer() {
 		if (boxMazeInterface == null)
 			return;
@@ -91,14 +92,15 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 				}
 				return;
 			} catch (RemoteException re) {
-				//TODO: Feilmelding: Kunne ikke flytte spiller pga kommunikasjonsproblemer
-				System.out.println(re.getMessage());
+				System.err.println("Kunne ikke flytte spiller. Mistet kontakt med tjeneren");
+				System.err.println(re.getMessage());
 			}
 		}
 		System.out.println("Avslutter");
 		System.exit(1);
 	}
 
+	/* Sjekker hvilken retning det er mulig å gå i */
 	private boolean validateNextMove(PositionInMaze current, PositionInMaze next) {
 		int currentXpos = current.getXpos();
 		int currentYpos = current.getYpos();
@@ -106,16 +108,16 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 		int nextYpos = next.getYpos();
 
 		// Next position cannot be out of bounds
-		if (nextXpos < 0 || nextYpos < 0) { return false; }
+		if (nextXpos < 0 || nextYpos < 0) {
+			return false;
+		}
 
 		// One step at the time
 		boolean xDifference = currentXpos - nextXpos == 1 || currentXpos - nextXpos == -1;
 		boolean yDifference = currentYpos - nextYpos == 1 || currentYpos - nextYpos == -1;
-		//if (!(xDifference ^ yDifference))
 		if (xDifference == yDifference) {
 			return false;
 		}
-		//	return false;
 
 		if (currentXpos - nextXpos == 0) {
 			if (currentYpos - nextYpos == 1) {
@@ -123,18 +125,18 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 			} else {
 				return maze[currentXpos][currentYpos].getDown() != null;
 			}
-		} else
-			if (currentYpos - nextYpos == 0) {
-				if (currentXpos - nextXpos == 1) {
-					return maze[currentXpos][currentYpos].getLeft() != null;
-				} else {
-					return maze[currentXpos][currentYpos].getRight() != null;
+		} else if (currentYpos - nextYpos == 0) {
+			if (currentXpos - nextXpos == 1) {
+				return maze[currentXpos][currentYpos].getLeft() != null;
+			} else {
+				return maze[currentXpos][currentYpos].getRight() != null;
 			}
 		}
-		System.out.println("Validerer trekk fra" + current + " til " + next);
+		System.out.println("Validerer trekk fra " + current + " til " + next);
 		return false;    // move failed
 	}
 
+	/* Oppdaterer HashMap med alle spilleres posisjoner*/
 	@Override
 	public void updatePlayerPosition(HashMap<String, Player> playerMap) throws RemoteException {
 		players = playerMap;
@@ -152,8 +154,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 				System.out.println(user.toString());
 				return;
 			} catch (RemoteException e) {
-				// TODO: Feilmelding: Kunne ikke koble til tjener
-				e.getLocalizedMessage();        // kunne ikke logge inn/koble til
+				System.err.println("Kunne ikke koble til tjener, " + e.getLocalizedMessage());
 			}
 		}
 		System.out.println("Avslutter");
@@ -171,28 +172,25 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 				mazeServer.unregisterPlayer(user);
 				return;
 			} catch (RemoteException e) {
-				//  TODO: Feilmelding: Utlogging feilet.
-				e.printStackTrace();
+				System.err.println("Utlogging feilet, " + e.getLocalizedMessage());
 			}
 		}
 		System.out.println("Avslutter");
 		System.exit(1);
 	}
 
-	@Override
-	public void setPlayer(Player user) throws RemoteException {
-		this.user = user;
-	}
-
 	public Box[][] getMaze() {
 		return maze;
 	}
-
 	public Player getPlayer() {
 		return user;
 	}
-
 	public Map<String, Player> getMazeClients() {
 		return players;
+	}
+
+	@Override
+	public void setPlayer(Player user) throws RemoteException {
+		this.user = user;
 	}
 }

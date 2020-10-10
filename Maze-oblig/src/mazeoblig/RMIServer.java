@@ -37,11 +37,8 @@ public class RMIServer {
 	private static String HOST_NAME;
 	private static InetAddress myAdress = null;
 	private static RMIServer rmi;
-	/**
-	 * @todo: Her legger man til andre objekter som skal være på server
-	 */
+
 	private static BoxMaze maze;
-	private static BoxMazeInterface boxMazeInterface;
 	private static MazeServerInterface mazeServerInterface;
 
 	public RMIServer() throws RemoteException, MalformedURLException,

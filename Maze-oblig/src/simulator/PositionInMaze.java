@@ -4,13 +4,12 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class PositionInMaze implements Serializable {
-	//private static final long serialVersionUID = -7098664856410899780L;
 
 	private int xpos, ypos;
 	
 	public PositionInMaze(int xp, int yp) {
-		xpos = xp;
-		ypos = yp;
+		this.xpos = xp;
+		this.ypos = yp;
 	}
 
 	public int getXpos() {
