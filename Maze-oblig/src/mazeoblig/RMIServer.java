@@ -13,8 +13,9 @@ package mazeoblig;
  * @author not attributable
  * @version 1.0
  */
-import java.net.*;
 
+import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
@@ -27,90 +28,95 @@ import java.rmi.registry.LocateRegistry;
  * It creates an instance of itself and continues processing in the constructor.
  */
 
-public class RMIServer
-{
-  private final static int DEFAULT_PORT = 9000;
-  private final static String DEFAULT_HOST = "undefined";
-  public static int    PORT = DEFAULT_PORT;
-  private static String HOST_NAME;
-  private static InetAddress myAdress = null;
-  private static RMIServer rmi;
-  private int MAX_CLIENTS = 5;
+public class RMIServer {
+	private final static int DEFAULT_PORT = 9000;
+	private final static String DEFAULT_HOST = "undefined";
+	public static int PORT = DEFAULT_PORT;
+	public static String MazeName = "Maze";
+	public static String mazeServerName = "MazeServer";
+	private static String HOST_NAME;
+	private static InetAddress myAdress = null;
+	private static RMIServer rmi;
+	/**
+	 * @todo: Her legger man til andre objekter som skal være på server
+	 */
+	private static BoxMaze maze;
+	private static BoxMazeInterface boxMazeInterface;
+	private static MazeServerInterface mazeServerInterface;
 
-  /**
-   * @todo: Her legger man til andre objekter som skal være på server
-  */
-    private static BoxMazeInterface boxMazeInterface;
-    private static MazeServerInterface mazeServerInterface;
-    public static String MazeName = "BoxMaze";
-    public static String mazeServerName = "MazeServer";
+	public RMIServer() throws RemoteException, MalformedURLException,
+			NotBoundException, AlreadyBoundException {
+		getStaticInfo();
+		LocateRegistry.createRegistry(PORT);
+		System.out.println("RMIRegistry created on host computer " + HOST_NAME +
+				" on port " + PORT);
 
-    public RMIServer() throws RemoteException, MalformedURLException,
-            NotBoundException, AlreadyBoundException {
-    getStaticInfo();
-    LocateRegistry.createRegistry(PORT);
-    System.out.println( "RMIRegistry created on host computer " + HOST_NAME +
-                        " on port " + Integer.toString( PORT) );
+		/* Legger inn labyrinten */
+		maze = new BoxMaze(Maze.DIM);
+		System.out.println("Remote implementation object created");
+		String urlString = "//" + HOST_NAME + ":" + PORT + "/" + MazeName;
+		Naming.rebind(urlString, maze);
+		System.out.println("Remote implementation object created for BoxMaze generator");
 
-    /* Legger inn labyrinten */
-    boxMazeInterface = new BoxMaze(Maze.DIM);
-    System.out.println( "Remote implementation object created" );
-    String urlString = "//" + HOST_NAME + ":" + PORT + "/" + MazeName;
-    Naming.rebind( urlString, boxMazeInterface );
-    System.out.println( "Remote implementation object created for BoxMaze generator" );
+		mazeServerInterface = new MazeServer(maze.getMaze());
+		String mazeServerURL = "//" + HOST_NAME + ":" + PORT + "/" + mazeServerName;
+		Naming.rebind(mazeServerURL, mazeServerInterface);
+		System.out.println("Remote implementation object created for MazeServer");
 
-    mazeServerInterface = new MazeServer(boxMazeInterface.getMaze());
-    String mazeServerURL = "//" + HOST_NAME + ":" + PORT + "/" + mazeServerName;
-    Naming.rebind(mazeServerURL, mazeServerInterface);
-    System.out.println("Remote implementation object created for MazeServer" );
+		System.out.println("Bindings Finished, waiting for client requests.");
+	}
 
-    System.out.println( "Bindings Finished, waiting for client requests." );
-  }
+	private static void getStaticInfo() {
+		/**
+		 * Henter hostname på min datamaskin
+		 */
+		if (HOST_NAME == null) HOST_NAME = DEFAULT_HOST;
+		if (PORT == 0) PORT = DEFAULT_PORT;
+		if (HOST_NAME.equals("undefined")) {
+			try {
+				myAdress = InetAddress.getLocalHost();
+				HOST_NAME = "localhost";
+			} catch (UnknownHostException e) {
+				System.err.println("Fant ikke server " + HOST_NAME);
+			}
+		} else
+			System.out.println("En MazeServer kjører allerede, bruk den");
 
-  private static void getStaticInfo() {
-    /**
-     * Henter hostname på min datamaskin
-     */
-    if (HOST_NAME == null) HOST_NAME = DEFAULT_HOST;
-    if (PORT == 0) PORT = DEFAULT_PORT;
-    if (HOST_NAME.equals("undefined")) {
-        try {
-            myAdress = InetAddress.getLocalHost();
-            HOST_NAME = "localhost";
-          } catch (UnknownHostException e) {
-              System.err.println("Fant ikke server " + HOST_NAME);
-          }
-    }
-    else
-      System.out.println("En MazeServer kjører allerede, bruk den");
+		System.out.println("Maze server navn: " + HOST_NAME);
+		System.out.println("Maze server ip:   " + myAdress.getHostAddress());
+	}
 
-    System.out.println("Maze server navn: " + HOST_NAME);
-    System.out.println("Maze server ip:   " + myAdress.getHostAddress());
-  }
+	public static int getRMIPort() {
+		return PORT;
+	}
 
-  public static int getRMIPort() { return PORT; }
-  public static String getHostName() { return HOST_NAME; }
-  public static String getHostIP() { return myAdress.getHostAddress(); }
+	public static String getHostName() {
+		return HOST_NAME;
+	}
 
-   public static void main ( String[] args ) {
-      try {
-          rmi = new RMIServer();
-      } catch ( java.rmi.UnknownHostException uhe ) {
-         System.out.println( "Maskinnavnet, " + HOST_NAME + " er ikke korrekt." );
-      } catch ( RemoteException re ) {
-         System.out.println( "Error starting service" );
-         System.out.println( "" + re );
-         re.printStackTrace(System.err);
-      } catch ( MalformedURLException mURLe ) {
-         System.out.println( "Internal error" + mURLe );
-      } catch ( NotBoundException nbe ) {
-         System.out.println( "Not Bound" );
-         System.out.println( "" + nbe );
-      } catch ( AlreadyBoundException abe ) {
-         System.out.println( "Already Bound" );
-         System.out.println( "" + abe );
-      }
-      System.out.println("RMIRegistry on " + HOST_NAME + ":" + PORT +
-                         "\n----------------------------");
-   }  // main
+	public static String getHostIP() {
+		return myAdress.getHostAddress();
+	}
+
+	public static void main(String[] args) {
+		try {
+			rmi = new RMIServer();
+		} catch (java.rmi.UnknownHostException uhe) {
+			System.out.println("Maskinnavnet, " + HOST_NAME + " er ikke korrekt.");
+		} catch (RemoteException re) {
+			System.out.println("Error starting service");
+			System.out.println("" + re);
+			re.printStackTrace(System.err);
+		} catch (MalformedURLException mURLe) {
+			System.out.println("Internal error" + mURLe);
+		} catch (NotBoundException nbe) {
+			System.out.println("Not Bound");
+			System.out.println("" + nbe);
+		} catch (AlreadyBoundException abe) {
+			System.out.println("Already Bound");
+			System.out.println("" + abe);
+		}
+		System.out.println("RMIRegistry on " + HOST_NAME + ":" + PORT +
+				"\n----------------------------");
+	}  // main
 }  // class RMIServer

@@ -34,24 +34,20 @@ import static java.lang.Thread.sleep;
  */
 @SuppressWarnings("serial")
 public class Maze extends Applet {
-
+	private BoxMazeInterface bm;
 	private Box[][] mazeBox;
-	public final static int DIM = 30;
+	public final static int DIM = 50;
 	Thread thread;
 	Game game;
 	private Boolean autorun = true;
 	private Boolean autorunStopped = false;
+	boolean skipPlayerUpdate = false;
 	int refreshEvery = 1000;
-	//private String server_hostname;
-	//private int server_portnumber;
-	//private ServerInterface serverInterface;
-	private final int CLIENTS_TO_CREATE = 5;
+
 
 	private JPanel panel;
 	private Graphics graphics;
 	private Image image;
-	private int frameWidth = 500;
-	private int frameHeight = 500;
 
 	/**
 	 * Establish server and registry connection (will only work if server and client is run from the same computer)
@@ -69,12 +65,15 @@ public class Maze extends Applet {
 		mazeBox = game.getMaze();
 
 		// Graphics
+		int frameWidth = 700;
+		int frameHeight = 700;
 		image = createImage(frameWidth, frameHeight);
 		graphics = image.getGraphics();
 
 		int dim = DIM;
-		for (int x = 0; x < (dim - 1); x++) {
-			for (int y = 0; y < (dim - 1); y++) {
+		int x, y;
+		for (x = 0; x < (dim - 1); x++) {
+			for (y = 0; y < (dim - 1); y++) {
 				if (mazeBox[x][y].getUp() == null)
 					graphics.drawLine(x * 10, y * 10, x * 10 + 10, y * 10);
 				if (mazeBox[x][y].getDown() == null)
@@ -113,20 +112,31 @@ public class Maze extends Applet {
 			};
 			add(panel);
 
+			int refreshRate = 500;
 
 			ActionListener actionListener = new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					repaint();
+					if (skipPlayerUpdate) {
+						skipPlayerUpdate = false;
+					} else {
+						repaint();
+					}
 				}
 			};
+			Timer timer = new Timer(refreshRate, actionListener);
+			timer.setRepeats(true);
+			timer.start();
 
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					game.logout();
+				}
+			});
 		}
 	}
 
-	public void start() {
-		autopilot();
-	}
+	public void start() { autopilot(); }
 
 	private void autopilot() {
 		thread = new Thread(() -> {
@@ -160,6 +170,7 @@ public class Maze extends Applet {
 	}
 
 	private void moveTo(PositionInMaze position) {
+		skipPlayerUpdate=true;
 		game.moveTo(position);
 		repaint();
 	}

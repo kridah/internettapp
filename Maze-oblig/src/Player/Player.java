@@ -22,29 +22,30 @@ public class Player implements Serializable {
 		this.uuid = UUID.randomUUID().toString();
 	}
 
+	public Player(PositionInMaze position) {
+		super();
+		this.position = position;
+		this.uuid = UUID.randomUUID().toString();
+	}
+
 	public PositionInMaze getPosition() {
 		return position;
 	}
-
 	public void setPosition(PositionInMaze position) {
 		this.position = position;
 	}
-
 	public String getUuid() {
 		return uuid;
 	}
-
-	public void setUuid(String uuid) {
+/*	public void setUuid(String uuid) {
 		this.uuid = uuid;
 	}
-
 	public String getUsername() {
 		return username;
 	}
-
 	public void setUsername(String username) {
 		this.username = username;
-	}
+	}*/
 
 	@Override
 	public String toString() {

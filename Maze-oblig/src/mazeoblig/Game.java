@@ -17,6 +17,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 	private int SERVER_PORTNUMBER;
 	private BoxMazeInterface boxMazeInterface;
 	private MazeServerInterface mazeServer;
+	private MazeServer ms;
 
 	private Box[][] maze;
 	Player user;
@@ -27,7 +28,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 		setup();
 		getMazeFromServer();
 		login();
-		players.put("1234", user);
+		players.put(user.getUuid(), user);
 	}
 
 	private void getServerDetails() {
@@ -39,7 +40,6 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 
 	private void setup() {
 		int tries = 0;
-
 		while (tries < 3) {
 			try {
 				tries++;
@@ -50,7 +50,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 				return;
 			} catch (RemoteException | NotBoundException e) {
 				e.printStackTrace();
-				System.err.println("Fant ikke objektet på serveren");
+				System.err.println("Kunne ikke koble til tjeneren");
 				System.exit(0);
 			}
 		}
@@ -77,12 +77,12 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 	}
 
 	public void moveTo(PositionInMaze position) {
-		if (boxMazeInterface == null || position == null || user == null || user.getPosition().equals(position))
+		if (boxMazeInterface == null || position == null || user == null || user.getPosition().equals(position)) {
 			return;
+		}
 		int tries = 0;
 		while (tries < 3) {
 			try {
-				tries++;
 				if (validateNextMove(user.getPosition(), position)) {
 					mazeServer.moveTo(user, position);
 					players.get(user.getUuid()).setPosition(position);
@@ -91,6 +91,7 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 				}
 				return;
 			} catch (RemoteException re) {
+				//TODO: Feilmelding: Kunne ikke flytte spiller pga kommunikasjonsproblemer
 				System.out.println(re.getMessage());
 			}
 		}
@@ -105,14 +106,16 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 		int nextYpos = next.getYpos();
 
 		// Next position cannot be out of bounds
-		if (nextXpos < 0 || nextYpos < 0)
-			return false;
+		if (nextXpos < 0 || nextYpos < 0) { return false; }
 
 		// One step at the time
 		boolean xDifference = currentXpos - nextXpos == 1 || currentXpos - nextXpos == -1;
 		boolean yDifference = currentYpos - nextYpos == 1 || currentYpos - nextYpos == -1;
-		if (!(xDifference ^ yDifference))
+		//if (!(xDifference ^ yDifference))
+		if (xDifference == yDifference) {
 			return false;
+		}
+		//	return false;
 
 		if (currentXpos - nextXpos == 0) {
 			if (currentYpos - nextYpos == 1) {
@@ -120,16 +123,16 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 			} else {
 				return maze[currentXpos][currentYpos].getDown() != null;
 			}
-		} else {
+		} else
 			if (currentYpos - nextYpos == 0) {
-				if (currentXpos - nextXpos == 0) {
+				if (currentXpos - nextXpos == 1) {
 					return maze[currentXpos][currentYpos].getLeft() != null;
 				} else {
-					return maze[currentXpos][nextXpos].getRight() != null;
-				}
+					return maze[currentXpos][currentYpos].getRight() != null;
 			}
-			return false;    // move failed
 		}
+		System.out.println("Validerer trekk fra" + current + " til " + next);
+		return false;    // move failed
 	}
 
 	@Override
@@ -141,18 +144,20 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 	private void login() {
 		if (boxMazeInterface == null)
 			return;
-
 		int tries = 0;
 		while (tries < 3) {
 			try {
 				tries++;
- 				mazeServer.registerPlayer("Ola Nordmann", this);
+				mazeServer.registerPlayer(this);
 				System.out.println(user.toString());
 				return;
 			} catch (RemoteException e) {
+				// TODO: Feilmelding: Kunne ikke koble til tjener
 				e.getLocalizedMessage();        // kunne ikke logge inn/koble til
 			}
 		}
+		System.out.println("Avslutter");
+		System.exit(1);
 	}
 
 	public void logout() {
@@ -160,18 +165,18 @@ public class Game extends UnicastRemoteObject implements GameInterface {
 			return;
 
 		int tries = 0;
-
 		while (tries < 3) {
 			try {
 				tries++;
 				mazeServer.unregisterPlayer(user);
 				return;
 			} catch (RemoteException e) {
+				//  TODO: Feilmelding: Utlogging feilet.
 				e.printStackTrace();
 			}
 		}
-
-
+		System.out.println("Avslutter");
+		System.exit(1);
 	}
 
 	@Override

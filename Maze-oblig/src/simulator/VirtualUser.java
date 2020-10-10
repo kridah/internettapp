@@ -32,12 +32,14 @@ public class VirtualUser {
 	private Box[][] maze;
 	private static int dim;
 
-	static int xp;
-	static int yp;
+	int xp;
+	int yp;
 	static boolean found = false;
 	Player player;
+	Random rand = new Random();
 
-	
+
+
 	private Stack <PositionInMaze> myWay = new Stack<PositionInMaze>();
 	private PositionInMaze [] FirstIteration; 
 	private PositionInMaze [] NextIteration; 
@@ -49,28 +51,31 @@ public class VirtualUser {
      */
 	public VirtualUser(Box[][] maze, Player player) {
 		this.maze = maze;
-		this.dim = maze.length;
+		this.dim = maze[0].length;
 		this.player = player;
-		init();
+		this.xp = player.getPosition().getXpos();
+		this.yp = player.getPosition().getYpos();
+		//this.xp = rand.nextInt(dim - 2) + 1;
+		//this.yp = rand.nextInt(dim - 2) + 1;
+		makeFirstIteration();
+		makeNextIteration();
 	}
-
-
 
 	/**
 	 * Initsierer en tilfeldig posisjon i labyrint
 	 */
 	private void init() {
-		/*
-		 * Setter en tifeldig posisjon i maze (xp og yp)
-		 */
+		/* Setter en tifeldig posisjon i maze (xp og yp) */
 		Random rand = new Random();
 		xp = rand.nextInt(dim - 2) + 1;
 		yp = rand.nextInt(dim - 2) + 1;
+		//xp = player.getPosition().getXpos();
+		//yp = player.getPosition().getYpos();
 
 		// L�ser veien ut av labyrinten basert p� tilfeldig inngang ...
-		makeFirstIteration();
+		//makeFirstIteration();
 		// og deretter l�ses labyrinten basert p� inngang fra starten 
-		makeNextIteration();
+		//makeNextIteration();
 	}
 	
 	/**
@@ -109,7 +114,8 @@ public class VirtualUser {
 				backtrack(adj[i], b);
 				// Hvis algoritmen har funnet veien ut av labyrinten, s� inneholder stacken (myWay) 
 				// veien fra det tilfeldige startpunktet og ut av labyrinten
-				if (!found) myWay.pop();
+				if (!found)
+					myWay.pop();
 				adjustXYAfterBacktrack(b, adj[i]);
 			}
 			// Hvis veien er funnet, er det ingen grunn til � fortsette
