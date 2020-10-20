@@ -1,3 +1,5 @@
+package server;
+
 import javax.naming.AuthenticationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -74,7 +76,7 @@ public class ADConnector {
 						attributes.get("mail").toString()
 				);
 				return person.toString();
-//					person = new Person(
+//					person = new server.Person(
 //							attributes.get("cn").toString(),
 //							attributes.get("title").toString(),
 //							attributes.get("givenName").toString(),

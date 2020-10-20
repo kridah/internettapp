@@ -53,8 +53,7 @@ public class MazeServer extends UnicastRemoteObject implements MazeServerInterfa
 				});
 				lock.lock();
 				errorList.forEach(error -> {
-					errorList.add(error);
-					System.out.println("Kunne ikke levere melding til " + error);
+					//System.out.println("Kunne ikke levere melding til " + error);
 				});
 				lock.unlock();
 			}

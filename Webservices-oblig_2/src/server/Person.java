@@ -1,3 +1,4 @@
+package server;
 
 /** Klassen definerer brukerfelt som er aktuelle for en LDAP-oppføring */
 public class Person {
@@ -36,7 +37,7 @@ public class Person {
 
 	@Override
 	public String toString() {
-		return "Person{\n" +
+		return "server.Person{\n" +
 				 cn + "\n" +
 				 givenName + "\n" +
 				 sn + "\n" +

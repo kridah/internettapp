@@ -14,7 +14,7 @@ import java.util.Map;
 public class Game extends UnicastRemoteObject implements GameInterface {
 
 	Player user;
-	private String SERVER_HOSTNAME;
+	private String SERVER_HOSTNAME = "localhost";
 	private int SERVER_PORTNUMBER;
 	private BoxMazeInterface boxMazeInterface;
 	private MazeServerInterface mazeServer;
